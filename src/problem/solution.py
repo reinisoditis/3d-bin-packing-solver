@@ -1,5 +1,6 @@
 """
 Solution class representing a complete bin packing solution.
+Simplified version - focuses on item-to-bin assignment.
 """
 
 import copy
@@ -10,24 +11,23 @@ from .item import Item
 class Solution:
     """
     Represents a complete solution to the 3D bin packing problem.
+    Simplified version: tracks which items are assigned to which bins.
     
     A solution consists of:
-    - A list of bins with items packed in them
-    - Assignment of all items to bins
-    - Fitness/cost value
+    - A list of bins with items assigned to them
+    - Each item is assigned to exactly one bin or is unpacked
     
     Attributes:
         bins: List of Bin objects used in this solution
         bin_dimensions: Tuple (length, width, height) for creating new bins
         all_items: List of all items that need to be packed
-        unpacked_items: List of items not yet packed
     """
     
     def __init__(self, bin_dimensions, items):
         self.bin_dimensions = bin_dimensions
-        self.all_items = items.copy()
+        self.all_items = [Item(item.id, item.length, item.width, item.height) 
+                          for item in items]
         self.bins = []
-        self.unpacked_items = items.copy()
         self._fitness = None  # Cache fitness value
         
     def add_bin(self):
@@ -37,9 +37,47 @@ class Solution:
         self.bins.append(new_bin)
         return new_bin
     
+    def get_item_by_id(self, item_id):
+        """
+        Get item by its ID.
+        
+        Args:
+            item_id: ID of the item to find
+            
+        Returns:
+            Item object or None if not found
+        """
+        for item in self.all_items:
+            if item.id == item_id:
+                return item
+        return None
+    
+    def get_bin_by_id(self, bin_id):
+        """
+        Get bin by its ID.
+        
+        Args:
+            bin_id: ID of the bin to find
+            
+        Returns:
+            Bin object or None if not found
+        """
+        for bin in self.bins:
+            if bin.id == bin_id:
+                return bin
+        return None
+    
+    def get_unpacked_items(self):
+        """Get list of items that are not assigned to any bin."""
+        return [item for item in self.all_items if not item.is_assigned()]
+    
+    def get_used_bins(self):
+        """Get list of bins that have at least one item."""
+        return [bin for bin in self.bins if not bin.is_empty()]
+    
     def get_used_bins_count(self):
         """Return the number of bins that have items in them."""
-        return sum(1 for bin in self.bins if not bin.is_empty())
+        return len(self.get_used_bins())
     
     def get_total_bins_count(self):
         """Return the total number of bins created."""
@@ -47,7 +85,7 @@ class Solution:
     
     def get_average_utilization(self):
         """Calculate average volume utilization across used bins."""
-        used_bins = [b for b in self.bins if not b.is_empty()]
+        used_bins = self.get_used_bins()
         if not used_bins:
             return 0.0
         return sum(b.get_volume_utilization() for b in used_bins) / len(used_bins)
@@ -55,24 +93,30 @@ class Solution:
     def is_valid(self):
         """
         Check if the solution is valid:
-        - All items are packed (no unpacked items)
-        - No overlaps in any bin
-        - All items are within bin boundaries
+        - All items are packed (assigned to bins)
+        - Each bin is feasible (volume and dimension constraints)
+        - No item is assigned to multiple bins
         
         Returns:
             bool: True if solution is valid
         """
         # Check if all items are packed
-        if self.unpacked_items:
+        unpacked = self.get_unpacked_items()
+        if unpacked:
             return False
         
-        # Check each bin for validity
+        # Check each bin for feasibility
         for bin in self.bins:
-            if bin.has_overlaps():
+            if not bin.is_feasible():
                 return False
-            for item in bin.items:
-                if not bin.is_valid_placement(item):
-                    return False
+        
+        # Check that no item appears in multiple bins
+        all_assigned_items = []
+        for bin in self.bins:
+            all_assigned_items.extend(bin.items)
+        
+        if len(all_assigned_items) != len(set(all_assigned_items)):
+            return False  # Duplicate assignment
         
         return True
     
@@ -82,13 +126,13 @@ class Solution:
         Lower is better.
         
         Components:
-        1. Number of used bins (primary objective)
-        2. Wasted space penalty
-        3. Unpacked items penalty (very high)
-        4. Constraint violations penalty
+        1. Number of used bins (primary objective) - weight 1000
+        2. Wasted space penalty - weight 10
+        3. Unpacked items penalty - weight 10000
+        4. Infeasible bins penalty - weight 5000
         
         Returns:
-            float: Fitness value (lower is better)
+            float: Fitness score (lower is better)
         """
         fitness = 0
         
@@ -101,18 +145,13 @@ class Solution:
         fitness += (100 - avg_utilization) * 10
         
         # Heavy penalty for unpacked items
-        fitness += len(self.unpacked_items) * 10000
+        unpacked_count = len(self.get_unpacked_items())
+        fitness += unpacked_count * 10000
         
-        # Penalty for constraint violations
+        # Penalty for infeasible bins
         for bin in self.bins:
-            # Penalty for overlaps
-            if bin.has_overlaps():
+            if not bin.is_feasible():
                 fitness += 5000
-            
-            # Penalty for invalid placements
-            for item in bin.items:
-                if not bin.is_valid_placement(item):
-                    fitness += 5000
         
         self._fitness = fitness
         return fitness
@@ -139,33 +178,21 @@ class Solution:
         Returns:
             Solution: A new independent copy
         """
-        new_solution = Solution(self.bin_dimensions, self.all_items)
+        # Create new solution with copied items
+        new_items = [Item(item.id, item.length, item.width, item.height) 
+                     for item in self.all_items]
+        new_solution = Solution(self.bin_dimensions, new_items)
         
-        # Deep copy bins and items
-        item_map = {}  # Map old item IDs to new item objects
+        # Create mapping from old item IDs to new items
+        item_map = {item.id: item for item in new_solution.all_items}
         
+        # Copy bins and their assignments
         for old_bin in self.bins:
             new_bin = new_solution.add_bin()
             
             for old_item in old_bin.items:
-                # Create new item with same properties
-                new_item = Item(old_item.id, old_item.length, 
-                               old_item.width, old_item.height)
-                new_item.rotation = old_item.rotation
-                if old_item.position:
-                    new_item.position = old_item.position
-                
+                new_item = item_map[old_item.id]
                 new_bin.add_item(new_item)
-                item_map[old_item.id] = new_item
-        
-        # Update unpacked items
-        new_solution.unpacked_items = []
-        for old_item in self.unpacked_items:
-            if old_item.id not in item_map:
-                new_item = Item(old_item.id, old_item.length,
-                               old_item.width, old_item.height)
-                new_solution.unpacked_items.append(new_item)
-                item_map[old_item.id] = new_item
         
         new_solution._fitness = self._fitness
         return new_solution
@@ -177,11 +204,12 @@ class Solution:
         Returns:
             dict: Dictionary with various statistics
         """
+        unpacked = self.get_unpacked_items()
         return {
             'total_bins': self.get_total_bins_count(),
             'used_bins': self.get_used_bins_count(),
             'avg_utilization': self.get_average_utilization(),
-            'unpacked_items': len(self.unpacked_items),
+            'unpacked_items': len(unpacked),
             'total_items': len(self.all_items),
             'fitness': self.get_fitness(),
             'is_valid': self.is_valid()
@@ -189,9 +217,10 @@ class Solution:
     
     def __repr__(self):
         """String representation of the solution."""
+        unpacked = len(self.get_unpacked_items())
         return (f"Solution(bins={self.get_used_bins_count()}/{self.get_total_bins_count()}, "
-                f"utilization={self.get_average_utilization():.1f}%, "
-                f"unpacked={len(self.unpacked_items)}, "
+                f"util={self.get_average_utilization():.1f}%, "
+                f"unpacked={unpacked}, "
                 f"fitness={self.get_fitness():.1f})")
     
     def __lt__(self, other):

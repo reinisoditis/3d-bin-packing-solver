@@ -1,17 +1,18 @@
 """
-Bin class representing a 3D container (car cargo area / automašīnas kravas kaste).
+Bin class representing a 3D container.
+Simplified version - tracks assigned items without exact positions.
 """
 
 class Bin:
     """
-    Represents a three-dimensional rectangular bin (container/automašīnas kravas kaste).
+    Represents a three-dimensional rectangular bin.
     
     Attributes:
         id: Unique identifier for the bin
         length: Length dimension (x-axis) - garums
         width: Width dimension (y-axis) - platums  
         height: Height dimension (z-axis) - augstums
-        items: List of items currently in this bin
+        items: List of items currently assigned to this bin
     """
     
     def __init__(self, bin_id, length, width, height):
@@ -46,8 +47,8 @@ class Bin:
     
     def can_fit_item(self, item):
         """
-        Check if an item can potentially fit in the bin (basic check).
-        This only checks volume, not actual 3D placement.
+        Check if an item can potentially fit in the bin.
+        Simple check: volume + dimensions feasibility.
         
         Args:
             item: Item object to check
@@ -55,23 +56,15 @@ class Bin:
         Returns:
             bool: True if item could potentially fit
         """
-        # Check volume
+        # Check if enough volume remains
         if item.get_volume() > self.get_remaining_volume():
             return False
         
-        # Check if any rotation fits within bin dimensions
-        for rotation in range(6):
-            temp_rotation = item.rotation
-            item.set_rotation(rotation)
-            dims = item.get_dimensions()
-            item.set_rotation(temp_rotation)  # Restore original rotation
-            
-            if (dims[0] <= self.length and 
-                dims[1] <= self.width and 
-                dims[2] <= self.height):
-                return True
+        # Check if item dimensions allow it to fit (any rotation)
+        if not item.fits_in_bin(self.length, self.width, self.height):
+            return False
         
-        return False
+        return True
     
     def add_item(self, item):
         """
@@ -82,6 +75,7 @@ class Bin:
         """
         if item not in self.items:
             self.items.append(item)
+            item.assign_to_bin(self.id)
     
     def remove_item(self, item):
         """
@@ -92,12 +86,12 @@ class Bin:
         """
         if item in self.items:
             self.items.remove(item)
-            item.reset()
+            item.unassign()
     
     def clear(self):
         """Remove all items from the bin."""
         for item in self.items:
-            item.reset()
+            item.unassign()
         self.items.clear()
     
     def get_item_count(self):
@@ -108,80 +102,36 @@ class Bin:
         """Check if the bin is empty."""
         return len(self.items) == 0
     
-    def check_overlap(self, item1, item2):
+    def is_feasible(self):
         """
-        Check if two items overlap in 3D space.
-        
-        Args:
-            item1: First Item object (must be placed)
-            item2: Second Item object (must be placed)
-            
-        Returns:
-            bool: True if items overlap
-        """
-        if not item1.is_placed() or not item2.is_placed():
-            return False
-        
-        x1, y1, z1 = item1.position
-        l1, w1, h1 = item1.get_dimensions()
-        
-        x2, y2, z2 = item2.position
-        l2, w2, h2 = item2.get_dimensions()
-        
-        # Check for overlap in all three dimensions
-        x_overlap = x1 < x2 + l2 and x1 + l1 > x2
-        y_overlap = y1 < y2 + w2 and y1 + w1 > y2
-        z_overlap = z1 < z2 + h2 and z1 + h1 > z2
-        
-        return x_overlap and y_overlap and z_overlap
-    
-    def has_overlaps(self):
-        """
-        Check if any items in the bin overlap with each other.
+        Check if the current bin packing is feasible.
+        In simplified version: check if total volume doesn't exceed capacity
+        and all items can theoretically fit dimension-wise.
         
         Returns:
-            bool: True if there are any overlaps
+            bool: True if bin packing is feasible
         """
-        for i in range(len(self.items)):
-            for j in range(i + 1, len(self.items)):
-                if self.check_overlap(self.items[i], self.items[j]):
-                    return True
-        return False
-    
-    def is_valid_placement(self, item):
-        """
-        Check if an item's current placement is valid (within bounds and no overlaps).
-        
-        Args:
-            item: Item object to check (must be placed)
-            
-        Returns:
-            bool: True if placement is valid
-        """
-        if not item.is_placed():
+        # Check volume constraint
+        if self.get_used_volume() > self.get_volume():
             return False
         
-        # Check if within bin boundaries
-        x, y, z = item.position
-        l, w, h = item.get_dimensions()
-        
-        if (x < 0 or y < 0 or z < 0 or
-            x + l > self.length or
-            y + w > self.width or
-            z + h > self.height):
-            return False
-        
-        # Check for overlaps with other items
-        for other_item in self.items:
-            if other_item.id != item.id and self.check_overlap(item, other_item):
+        # Check if each item can fit dimension-wise
+        for item in self.items:
+            if not item.fits_in_bin(self.length, self.width, self.height):
                 return False
         
         return True
     
+    def get_largest_item_volume(self):
+        """Get the volume of the largest item in this bin."""
+        if not self.items:
+            return 0
+        return max(item.get_volume() for item in self.items)
+    
     def __repr__(self):
         """String representation of the bin."""
         return (f"Bin(id={self.id}, dims=({self.length}x{self.width}x{self.height}), "
-                f"items={self.get_item_count()}, utilization={self.get_volume_utilization():.1f}%)")
+                f"items={self.get_item_count()}, util={self.get_volume_utilization():.1f}%)")
     
     def __eq__(self, other):
         """Check equality based on ID."""
