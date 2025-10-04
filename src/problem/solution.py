@@ -14,7 +14,7 @@ class Solution:
     Simplified version: tracks which items are assigned to which bins.
     
     A solution consists of:
-    - A list of bins with items assigned to them
+    - A list of bins (automašīnas) with items assigned to them
     - Each item is assigned to exactly one bin or is unpacked
     
     Attributes:
@@ -24,6 +24,13 @@ class Solution:
     """
     
     def __init__(self, bin_dimensions, items):
+        """
+        Initialize a solution.
+        
+        Args:
+            bin_dimensions: Tuple (length, width, height) for bins
+            items: List of Item objects to pack
+        """
         self.bin_dimensions = bin_dimensions
         self.all_items = [Item(item.id, item.length, item.width, item.height) 
                           for item in items]
@@ -128,8 +135,9 @@ class Solution:
         Components:
         1. Number of used bins (primary objective) - weight 1000
         2. Wasted space penalty - weight 10
-        3. Unpacked items penalty - weight 10000
-        4. Infeasible bins penalty - weight 5000
+        3. Variance in bin utilization (balance penalty) - weight 50
+        4. Unpacked items penalty - weight 10000
+        5. Infeasible bins penalty - weight 5000
         
         Returns:
             float: Fitness score (lower is better)
@@ -143,6 +151,17 @@ class Solution:
         # Penalty for wasted space (encourage better packing)
         avg_utilization = self.get_average_utilization()
         fitness += (100 - avg_utilization) * 10
+        
+        # Penalty for unbalanced packing (variance in utilization)
+        # This encourages more balanced distribution across bins
+        used_bin_list = self.get_used_bins()
+        if len(used_bin_list) > 1:
+            utilizations = [b.get_volume_utilization() for b in used_bin_list]
+            # Calculate standard deviation
+            mean_util = sum(utilizations) / len(utilizations)
+            variance = sum((u - mean_util) ** 2 for u in utilizations) / len(utilizations)
+            std_dev = variance ** 0.5
+            fitness += std_dev * 50  # Penalty for imbalanced packing
         
         # Heavy penalty for unpacked items
         unpacked_count = len(self.get_unpacked_items())
