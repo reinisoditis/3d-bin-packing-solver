@@ -65,7 +65,9 @@ class LocalSearch:
             # Generate all neighbors
             swap_neighbors = get_all_swap_neighbors(current_solution)
             move_neighbors = get_all_move_neighbors(current_solution)
-            all_neighbors = swap_neighbors + move_neighbors
+            from .operators import get_all_rebalance_neighbors
+            rebalance_neighbors = get_all_rebalance_neighbors(current_solution)
+            all_neighbors = swap_neighbors + move_neighbors + rebalance_neighbors
             
             if not all_neighbors:
                 if self.verbose:

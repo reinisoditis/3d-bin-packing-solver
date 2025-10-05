@@ -2,10 +2,16 @@
 Utility functions and helper modules.
 """
 
-from .constructive import (
-    first_fit_decreasing,
+from .constructive import first_fit_decreasing
+from .placement import (
+    find_best_position_for_item,
+    pack_items_in_bin,
+    repack_bin
 )
 
 __all__ = [
-    'first_fit_decreasing'
+    'first_fit_decreasing',
+    'find_best_position_for_item',
+    'pack_items_in_bin',
+    'repack_bin'
 ]

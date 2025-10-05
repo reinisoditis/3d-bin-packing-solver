@@ -153,15 +153,13 @@ class Solution:
         fitness += (100 - avg_utilization) * 10
         
         # Penalty for unbalanced packing (variance in utilization)
-        # This encourages more balanced distribution across bins
         used_bin_list = self.get_used_bins()
         if len(used_bin_list) > 1:
             utilizations = [b.get_volume_utilization() for b in used_bin_list]
-            # Calculate standard deviation
             mean_util = sum(utilizations) / len(utilizations)
             variance = sum((u - mean_util) ** 2 for u in utilizations) / len(utilizations)
             std_dev = variance ** 0.5
-            fitness += std_dev * 50  # Penalty for imbalanced packing
+            fitness += std_dev * 50
         
         # Heavy penalty for unpacked items
         unpacked_count = len(self.get_unpacked_items())
@@ -197,10 +195,17 @@ class Solution:
         Returns:
             Solution: A new independent copy
         """
-        # Create new solution with copied items
-        new_items = [Item(item.id, item.length, item.width, item.height) 
-                     for item in self.all_items]
-        new_solution = Solution(self.bin_dimensions, new_items)
+        # Create new solution with copied items (with full state)
+        new_items = []
+        for item in self.all_items:
+            new_item = Item(item.id, item.length, item.width, item.height)
+            new_item.rotation = item.rotation
+            new_item.position = item.position
+            new_item.assigned_bin = item.assigned_bin
+            new_items.append(new_item)
+        
+        new_solution = Solution(self.bin_dimensions, [])
+        new_solution.all_items = new_items
         
         # Create mapping from old item IDs to new items
         item_map = {item.id: item for item in new_solution.all_items}
@@ -211,7 +216,11 @@ class Solution:
             
             for old_item in old_bin.items:
                 new_item = item_map[old_item.id]
-                new_bin.add_item(new_item)
+                # Don't call add_item as it would change position
+                # Just add to list and set assignment
+                if new_item not in new_bin.items:
+                    new_bin.items.append(new_item)
+                    new_item.assigned_bin = new_bin.id
         
         new_solution._fitness = self._fitness
         return new_solution
