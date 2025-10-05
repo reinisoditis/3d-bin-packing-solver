@@ -3,87 +3,13 @@ Main entry point for 3D Bin Packing Problem solver.
 Uses Local Search optimization algorithm with full 3D placement.
 """
 
-from src.problem import Item
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+
+from tests.test_instances import TEST_INSTANCES
 from src.utils import first_fit_decreasing
 from src.algorithms import LocalSearch
-import random
-
-
-def create_test_instance_small():
-    """Create a small challenging test instance - requires multiple bins."""
-    items = [
-        Item(1, length=8, width=6, height=4),   # 192
-        Item(2, length=7, width=5, height=4),   # 140
-        Item(3, length=6, width=5, height=3),   # 90
-        Item(4, length=5, width=4, height=3),   # 60
-        Item(5, length=4, width=4, height=3),   # 48
-        Item(6, length=5, width=3, height=2),   # 30
-        Item(7, length=4, width=3, height=2),   # 24
-        Item(8, length=3, width=3, height=2),   # 18
-    ]
-    # Total volume: 602, bin volume: 480 → needs at least 2 bins
-    bin_dimensions = (10, 8, 6)
-    return bin_dimensions, items
-
-
-def create_test_instance_medium():
-    """Create a medium challenging test instance."""
-    items = [
-        Item(1, length=9, width=7, height=5),   # 315
-        Item(2, length=8, width=6, height=5),   # 240
-        Item(3, length=7, width=6, height=4),   # 168
-        Item(4, length=6, width=5, height=4),   # 120
-        Item(5, length=6, width=5, height=3),   # 90
-        Item(6, length=5, width=4, height=3),   # 60
-        Item(7, length=5, width=4, height=2),   # 40
-        Item(8, length=4, width=4, height=3),   # 48
-        Item(9, length=4, width=3, height=3),   # 36
-        Item(10, length=4, width=3, height=2),  # 24
-        Item(11, length=3, width=3, height=2),  # 18
-        Item(12, length=3, width=2, height=2),  # 12
-    ]
-    # Total volume: 1171, bin volume: 480 → needs at least 3 bins
-    bin_dimensions = (10, 8, 6)
-    return bin_dimensions, items
-
-
-def create_test_instance_large():
-    """Create a large challenging test instance."""
-    items = [
-        Item(1, length=9, width=7, height=5),
-        Item(2, length=8, width=7, height=5),
-        Item(3, length=8, width=6, height=5),
-        Item(4, length=7, width=6, height=5),
-        Item(5, length=7, width=6, height=4),
-        Item(6, length=6, width=5, height=4),
-        Item(7, length=6, width=5, height=4),
-        Item(8, length=6, width=5, height=3),
-        Item(9, length=5, width=5, height=3),
-        Item(10, length=5, width=4, height=3),
-        Item(11, length=5, width=4, height=3),
-        Item(12, length=5, width=4, height=2),
-        Item(13, length=4, width=4, height=3),
-        Item(14, length=4, width=4, height=3),
-        Item(15, length=4, width=3, height=3),
-    ]
-    bin_dimensions = (10, 8, 6)
-    return bin_dimensions, items
-
-
-def create_random_instance(num_items, bin_dimensions=(10, 8, 6), seed=42):
-    """Create a random test instance."""
-    random.seed(seed)
-    items = []
-    
-    for i in range(1, num_items + 1):
-        # Generate random dimensions (30-90% of bin dimensions)
-        length = random.randint(int(bin_dimensions[0] * 0.3), int(bin_dimensions[0] * 0.9))
-        width = random.randint(int(bin_dimensions[1] * 0.3), int(bin_dimensions[1] * 0.9))
-        height = random.randint(int(bin_dimensions[2] * 0.3), int(bin_dimensions[2] * 0.9))
-        
-        items.append(Item(i, length, width, height))
-    
-    return bin_dimensions, items
 
 
 def solve_instance(bin_dimensions, items, instance_name=""):
@@ -164,11 +90,11 @@ def solve_instance(bin_dimensions, items, instance_name=""):
     print(f"{'':>10} Valid solution: {final_stats['is_valid']}")
     
     if bins_saved > 0:
-        print(f"{'':>10} ✓ Local Search found improvement!")
+        print(f"{'':>10} SUCCESS: Local Search reduced bin count!")
     elif improvement > 0:
-        print(f"{'':>10} ✓ Local Search improved packing quality!")
+        print(f"{'':>10} SUCCESS: Local Search improved packing quality!")
     else:
-        print(f"{'':>10} ○ FFD already found good solution")
+        print(f"{'':>10} INFO: FFD already found good solution")
     
     return {
         'instance_name': instance_name,
@@ -186,7 +112,7 @@ def solve_instance(bin_dimensions, items, instance_name=""):
 
 
 def main():
-    """Main function."""
+    """Main function - runs all test instances."""
     print("\n")
     print("*" * 70)
     print("3D BIN PACKING PROBLEM - LOCAL SEARCH WITH FULL 3D PLACEMENT")
@@ -194,27 +120,16 @@ def main():
     
     results = []
     
-    # Test 1: Small instance
-    bin_dims, items = create_test_instance_small()
-    result = solve_instance(bin_dims, items, "Small Instance (8 items)")
-    results.append(result)
-    
-    print("\n")
-    
-    # Test 2: Medium instance
-    bin_dims, items = create_test_instance_medium()
-    result = solve_instance(bin_dims, items, "Medium Instance (12 items)")
-    results.append(result)
-    
-    print("\n")
-    
-    # Test 3: Large instance  
-    bin_dims, items = create_test_instance_large()
-    result = solve_instance(bin_dims, items, "Large Instance (15 items)")
-    results.append(result)
+    # Run all predefined test instances
+    for key in ['small', 'medium', 'large']:
+        instance_info = TEST_INSTANCES[key]
+        bin_dims, items = instance_info['generator']()
+        result = solve_instance(bin_dims, items, instance_info['name'])
+        results.append(result)
+        print("\n")
     
     # Final summary table
-    print("\n\n")
+    print("\n")
     print("*" * 70)
     print("SUMMARY OF ALL INSTANCES")
     print("*" * 70)
