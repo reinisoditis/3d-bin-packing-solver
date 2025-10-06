@@ -15,7 +15,7 @@ from .operators import (
     get_random_neighbor
 )
 
-from .local_search import LocalSearch, FirstImprovementLocalSearch
+from .simulated_annealing import SimulatedAnnealing
 
 __all__ = [
     'swap_items',
@@ -29,5 +29,6 @@ __all__ = [
     'get_all_rebalance_neighbors',
     'get_random_neighbor',
     'LocalSearch',
-    'FirstImprovementLocalSearch'
+    'FirstImprovementLocalSearch',
+    'SimulatedAnnealing'
 ]
