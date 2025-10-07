@@ -29,3 +29,6 @@ This is an **NP-hard** optimization problem, meaning:
 - Optimal solutions require exponential time for larger instances
 - Heuristic and approximation algorithms are typically used for practical applications
 
+### How to run
+To run the programm just simply run the main.py script at the root of the project.
+All the test cases are defined under ./tests/test_instances.py
