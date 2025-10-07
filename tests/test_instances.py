@@ -1,7 +1,3 @@
-"""
-Test instances for 3D Bin Packing Problem.
-Contains predefined small, medium, and large test cases.
-"""
 from src.problem import Item
 
 def create_bad_ordering_instance():
@@ -22,11 +18,6 @@ def create_bad_ordering_instance():
 
 
 def create_fragmentation_instance():
-    """
-    Many similarly-sized items create fragmentation.
-    FFD can't distinguish well between them.
-    Total volume: ~1050, bin volume: 480
-    """
     items = [
         Item(1, length=6, width=5, height=4),   # 120
         Item(2, length=5, width=6, height=4),   # 120
@@ -120,11 +111,6 @@ def create_large_instance():
     return bin_dimensions, items
 
 def create_xlarge_instance():
-    """
-    Extra large test instance - 30 items.
-    Mix of large, medium, and small items for realistic packing challenge.
-    Total volume: ~3500, bin volume: 480 → needs at least 8 bins
-    """
     items = [
         # Large items (8 items)
         Item(1, length=9, width=7, height=5),   # 315
