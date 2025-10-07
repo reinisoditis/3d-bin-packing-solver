@@ -265,49 +265,6 @@ def get_random_rebalance_neighbor(solution):
     return rebalance_bins(solution, bin1.id, bin2.id)
 
 
-def get_all_swap_neighbors(solution):
-    neighbors = []
-    assigned_items = [item for item in solution.all_items if item.is_assigned()]
-    
-    for i in range(len(assigned_items)):
-        for j in range(i + 1, len(assigned_items)):
-            item1 = assigned_items[i]
-            item2 = assigned_items[j]
-            
-            if item1.assigned_bin != item2.assigned_bin:
-                neighbor = swap_items(solution, item1.id, item2.id)
-                if neighbor:
-                    neighbors.append(neighbor)
-    
-    return neighbors
-
-
-def get_all_move_neighbors(solution):
-    neighbors = []
-    assigned_items = [item for item in solution.all_items if item.is_assigned()]
-    
-    for item in assigned_items:
-        for bin in solution.bins:
-            if bin.id != item.assigned_bin:
-                neighbor = move_item(solution, item.id, bin.id)
-                if neighbor:
-                    neighbors.append(neighbor)
-    
-    return neighbors
-
-
-def get_all_rebalance_neighbors(solution):
-    neighbors = []
-    
-    for i in range(len(solution.bins)):
-        for j in range(i + 1, len(solution.bins)):
-            neighbor = rebalance_bins(solution, i, j)
-            if neighbor:
-                neighbors.append(neighbor)
-    
-    return neighbors
-
-
 def get_random_neighbor(solution):
     choice = random.random()
     

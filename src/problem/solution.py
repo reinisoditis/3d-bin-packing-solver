@@ -3,7 +3,6 @@ Solution class representing a complete bin packing solution.
 Simplified version - focuses on item-to-bin assignment.
 """
 
-import copy
 from .bin import Bin
 from .item import Item
 

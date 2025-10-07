@@ -118,14 +118,3 @@ def pack_items_in_bin(bin, items, sort_items=True):
             unpacked.append(item)
     
     return packed, unpacked
-
-
-def repack_bin(bin, items=None):
-    if items is None:
-        items = bin.items.copy()
-    
-    # Clear bin
-    bin.clear()
-    
-    # Pack items
-    return pack_items_in_bin(bin, items, sort_items=True)
