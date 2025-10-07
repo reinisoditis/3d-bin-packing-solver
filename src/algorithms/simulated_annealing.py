@@ -43,20 +43,6 @@ class SimulatedAnnealing:
         accepted_moves = 0
         rejected_moves = 0
         
-        if self.verbose:
-            print("=" * 70)
-            print("Simulated Annealing Algorithm")
-            print("=" * 70)
-            print(f"Initial temperature: {self.initial_temp}")
-            print(f"Cooling rate: {self.cooling_rate}")
-            print(f"Minimum temperature: {self.min_temp}")
-            print(f"Iterations per temperature: {self.iterations_per_temp}")
-            print()
-            print(f"Initial solution: {current_solution}")
-            print(f"Initial fitness: {current_solution.get_fitness():.2f}")
-            print(f"Initial bins: {current_solution.get_used_bins_count()}")
-            print()
-        
         # Main loop: while temperature above minimum
         while temperature > self.min_temp:
             iteration += 1
@@ -90,12 +76,6 @@ class SimulatedAnnealing:
                     # Update best solution if improved
                     if neighbor_fitness < best_solution.get_fitness():
                         best_solution = neighbor.copy()
-                        
-                        if self.verbose:
-                            bins_saved = initial_solution.get_used_bins_count() - best_solution.get_used_bins_count()
-                            print(f"T={temperature:.1f}, Iter={total_iterations}: NEW BEST!")
-                            print(f"  Bins: {best_solution.get_used_bins_count()}, Fitness: {neighbor_fitness:.2f}")
-                            print(f"  Bins saved from initial: {bins_saved}")
                 else:
                     rejected_moves += 1
             

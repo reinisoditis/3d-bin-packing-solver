@@ -8,18 +8,6 @@ from src.utils.placement import pack_items_in_bin
 
 
 def swap_items(solution, item1_id, item2_id):
-    """
-    Swap two items between their bins and repack both bins.
-    If repacking fails, leave unpacked items in solution (penalized by fitness).
-    
-    Args:
-        solution: Current solution
-        item1_id: ID of first item
-        item2_id: ID of second item
-        
-    Returns:
-        Solution: New solution with items swapped (or None if same bins)
-    """
     item1 = solution.get_item_by_id(item1_id)
     item2 = solution.get_item_by_id(item2_id)
     
@@ -58,17 +46,6 @@ def swap_items(solution, item1_id, item2_id):
 
 
 def move_item(solution, item_id, target_bin_id):
-    """
-    Move an item to a different bin and repack the target bin.
-    
-    Args:
-        solution: Current solution
-        item_id: ID of item to move
-        target_bin_id: ID of target bin
-        
-    Returns:
-        Solution: New solution with item moved (or None if not possible)
-    """
     item = solution.get_item_by_id(item_id)
     
     if not item or not item.is_assigned():
@@ -104,18 +81,6 @@ def move_item(solution, item_id, target_bin_id):
 
 
 def merge_bins_aggressive(solution, bin1_id, bin2_id):
-    """
-    Aggressively try to merge two bins into one.
-    Accept even if some items remain unpacked (will be penalized by fitness).
-    
-    Args:
-        solution: Current solution
-        bin1_id: Target bin ID (merge into this)
-        bin2_id: Source bin ID (merge from this)
-        
-    Returns:
-        Solution: Merged solution or None
-    """
     bin1 = solution.get_bin_by_id(bin1_id)
     bin2 = solution.get_bin_by_id(bin2_id)
     
@@ -126,9 +91,6 @@ def merge_bins_aggressive(solution, bin1_id, bin2_id):
     total_volume = bin1.get_used_volume() + bin2.get_used_volume()
     if total_volume > bin1.get_volume() * 1.5:  # Allow some overage
         return None
-    
-    # DEBUG
-    # print(f"  [MERGE] Attempting merge: bin {bin1_id} + bin {bin2_id}")
     
     new_solution = solution.copy()
     new_bin1 = new_solution.get_bin_by_id(bin1_id)
@@ -144,37 +106,20 @@ def merge_bins_aggressive(solution, bin1_id, bin2_id):
     # Try to pack all into bin1
     packed, unpacked = pack_items_in_bin(new_bin1, all_items, sort_items=True)
     
-    # DEBUG
-    # print(f"    Packed: {len(packed)}/{len(all_items)}, Unpacked: {len(unpacked)}")
-    
     # If managed to pack everything - success!
     if not unpacked:
-        # print(f"    [SUCCESS] Full merge!")
         new_solution.invalidate_fitness()
         return new_solution
     
     # If most items fit (>80%), accept it
     # Unpacked items heavily penalized by fitness
     if len(packed) >= len(all_items) * 0.8:
-        # print(f"    [PARTIAL SUCCESS] 80%+ merged")
         new_solution.invalidate_fitness()
         return new_solution
-    
-    # print(f"    [FAILED] Not enough items fit")
     return None
 
 
 def consolidate_small_bins(solution):
-    """
-    Try to consolidate items from small/underutilized bins.
-    Identify bins with low utilization and try to empty them.
-    
-    Args:
-        solution: Current solution
-        
-    Returns:
-        Solution: Consolidated solution or None
-    """
     used_bins = solution.get_used_bins()
     
     if len(used_bins) < 2:
@@ -226,7 +171,6 @@ def consolidate_small_bins(solution):
 
 
 def get_random_merge_neighbor(solution):
-    """Try random bin merge."""
     if len(solution.bins) < 2:
         return None
     
@@ -240,22 +184,10 @@ def get_random_merge_neighbor(solution):
 
 
 def get_random_consolidate_neighbor(solution):
-    """Try to consolidate small bins."""
     return consolidate_small_bins(solution)
 
 
 def rebalance_bins(solution, bin1_id, bin2_id):
-    """
-    Try to rebalance items between two bins for better utilization.
-    
-    Args:
-        solution: Current solution
-        bin1_id: First bin ID
-        bin2_id: Second bin ID
-        
-    Returns:
-        Solution: Rebalanced solution or None
-    """
     bin1 = solution.get_bin_by_id(bin1_id)
     bin2 = solution.get_bin_by_id(bin2_id)
     
@@ -287,7 +219,6 @@ def rebalance_bins(solution, bin1_id, bin2_id):
 
 
 def get_random_swap_neighbor(solution):
-    """Generate a random neighbor by swapping two items."""
     assigned_items = [item for item in solution.all_items if item.is_assigned()]
     
     if len(assigned_items) < 2:
@@ -306,7 +237,6 @@ def get_random_swap_neighbor(solution):
 
 
 def get_random_move_neighbor(solution):
-    """Generate a random neighbor by moving an item to another bin."""
     assigned_items = [item for item in solution.all_items if item.is_assigned()]
     
     if not assigned_items or len(solution.bins) < 2:
@@ -328,7 +258,6 @@ def get_random_move_neighbor(solution):
 
 
 def get_random_rebalance_neighbor(solution):
-    """Generate a random neighbor by rebalancing two bins."""
     if len(solution.bins) < 2:
         return None
     
@@ -337,7 +266,6 @@ def get_random_rebalance_neighbor(solution):
 
 
 def get_all_swap_neighbors(solution):
-    """Generate all possible swap neighbors."""
     neighbors = []
     assigned_items = [item for item in solution.all_items if item.is_assigned()]
     
@@ -355,7 +283,6 @@ def get_all_swap_neighbors(solution):
 
 
 def get_all_move_neighbors(solution):
-    """Generate all possible move neighbors."""
     neighbors = []
     assigned_items = [item for item in solution.all_items if item.is_assigned()]
     
@@ -370,7 +297,6 @@ def get_all_move_neighbors(solution):
 
 
 def get_all_rebalance_neighbors(solution):
-    """Generate all possible rebalance neighbors."""
     neighbors = []
     
     for i in range(len(solution.bins)):
@@ -383,7 +309,6 @@ def get_all_rebalance_neighbors(solution):
 
 
 def get_random_neighbor(solution):
-    """Generate a random neighbor using any operator, including merge."""
     choice = random.random()
     
     if choice < 0.25:  # 25% merge - IMPORTANT for bin reduction!

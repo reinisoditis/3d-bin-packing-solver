@@ -7,23 +7,6 @@ from .placement import find_best_position_for_item
 
 
 def first_fit_decreasing(bin_dimensions, items):
-    """
-    First Fit Decreasing (FFD) heuristic with 3D placement.
-    
-    Algorithm:
-    1. Sort items by volume in descending order (largest first)
-    2. For each item:
-       a. Try to place it in the first bin where it physically fits
-       b. Use placement algorithm to find valid position
-       c. If it doesn't fit in any bin, create a new bin
-    
-    Args:
-        bin_dimensions: Tuple (length, width, height) for bins
-        items: List of Item objects to pack
-        
-    Returns:
-        Solution: Initial solution created by FFD with 3D placement
-    """
     # Create solution
     solution = Solution(bin_dimensions, items)
     
@@ -61,7 +44,6 @@ def first_fit_decreasing(bin_dimensions, items):
                 item.set_position(x, y, z)
                 new_bin.add_item(item)
             else:
-                # Item doesn't fit even in empty bin - shouldn't happen if item < bin
                 print(f"WARNING: Item {item.id} doesn't fit in bin!")
     
     solution.invalidate_fitness()

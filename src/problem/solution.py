@@ -9,28 +9,7 @@ from .item import Item
 
 
 class Solution:
-    """
-    Represents a complete solution to the 3D bin packing problem.
-    Simplified version: tracks which items are assigned to which bins.
-    
-    A solution consists of:
-    - A list of bins (automašīnas) with items assigned to them
-    - Each item is assigned to exactly one bin or is unpacked
-    
-    Attributes:
-        bins: List of Bin objects used in this solution
-        bin_dimensions: Tuple (length, width, height) for creating new bins
-        all_items: List of all items that need to be packed
-    """
-    
     def __init__(self, bin_dimensions, items):
-        """
-        Initialize a solution.
-        
-        Args:
-            bin_dimensions: Tuple (length, width, height) for bins
-            items: List of Item objects to pack
-        """
         self.bin_dimensions = bin_dimensions
         self.all_items = [Item(item.id, item.length, item.width, item.height) 
                           for item in items]
@@ -38,75 +17,42 @@ class Solution:
         self._fitness = None  # Cache fitness value
         
     def add_bin(self):
-        """Create and add a new empty bin to the solution."""
         bin_id = len(self.bins)
         new_bin = Bin(bin_id, *self.bin_dimensions)
         self.bins.append(new_bin)
         return new_bin
     
     def get_item_by_id(self, item_id):
-        """
-        Get item by its ID.
-        
-        Args:
-            item_id: ID of the item to find
-            
-        Returns:
-            Item object or None if not found
-        """
         for item in self.all_items:
             if item.id == item_id:
                 return item
         return None
     
     def get_bin_by_id(self, bin_id):
-        """
-        Get bin by its ID.
-        
-        Args:
-            bin_id: ID of the bin to find
-            
-        Returns:
-            Bin object or None if not found
-        """
         for bin in self.bins:
             if bin.id == bin_id:
                 return bin
         return None
     
     def get_unpacked_items(self):
-        """Get list of items that are not assigned to any bin."""
         return [item for item in self.all_items if not item.is_assigned()]
     
     def get_used_bins(self):
-        """Get list of bins that have at least one item."""
         return [bin for bin in self.bins if not bin.is_empty()]
     
     def get_used_bins_count(self):
-        """Return the number of bins that have items in them."""
         return len(self.get_used_bins())
     
     def get_total_bins_count(self):
-        """Return the total number of bins created."""
         return len(self.bins)
     
     def get_average_utilization(self):
-        """Calculate average volume utilization across used bins."""
         used_bins = self.get_used_bins()
         if not used_bins:
             return 0.0
         return sum(b.get_volume_utilization() for b in used_bins) / len(used_bins)
     
     def is_valid(self):
-        """
-        Check if the solution is valid:
-        - All items are packed (assigned to bins)
-        - Each bin is feasible (volume and dimension constraints)
-        - No item is assigned to multiple bins
-        
-        Returns:
-            bool: True if solution is valid
-        """
         # Check if all items are packed
         unpacked = self.get_unpacked_items()
         if unpacked:
@@ -128,20 +74,6 @@ class Solution:
         return True
     
     def calculate_fitness(self):
-        """
-        Calculate the fitness (cost) of this solution.
-        Lower is better.
-        
-        Components:
-        1. Number of used bins (primary objective) - weight 1000
-        2. Wasted space penalty - weight 10
-        3. Variance in bin utilization (balance penalty) - weight 50
-        4. Unpacked items penalty - weight 10000
-        5. Infeasible bins penalty - weight 5000
-        
-        Returns:
-            float: Fitness score (lower is better)
-        """
         fitness = 0
         
         # Primary objective: minimize number of bins
@@ -174,27 +106,14 @@ class Solution:
         return fitness
     
     def get_fitness(self):
-        """
-        Get cached fitness value or calculate if not cached.
-        
-        Returns:
-            float: Fitness value
-        """
         if self._fitness is None:
             return self.calculate_fitness()
         return self._fitness
     
     def invalidate_fitness(self):
-        """Invalidate cached fitness value (call after modifications)."""
         self._fitness = None
     
     def copy(self):
-        """
-        Create a deep copy of this solution.
-        
-        Returns:
-            Solution: A new independent copy
-        """
         # Create new solution with copied items (with full state)
         new_items = []
         for item in self.all_items:
@@ -226,12 +145,6 @@ class Solution:
         return new_solution
     
     def get_statistics(self):
-        """
-        Get statistics about the solution.
-        
-        Returns:
-            dict: Dictionary with various statistics
-        """
         unpacked = self.get_unpacked_items()
         return {
             'total_bins': self.get_total_bins_count(),

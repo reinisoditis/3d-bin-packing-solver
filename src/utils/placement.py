@@ -5,17 +5,6 @@ These algorithms determine WHERE to place items in bins.
 
 
 def find_best_position_for_item(bin, item):
-    """
-    Find the best position to place an item in a bin.
-    Uses Bottom-Left-Back strategy with all rotation attempts.
-    
-    Args:
-        bin: Bin object to place item in
-        item: Item object to place
-        
-    Returns:
-        tuple: (x, y, z, rotation) if position found, None otherwise
-    """
     best_position = None
     best_height = float('inf')
     
@@ -33,19 +22,7 @@ def find_best_position_for_item(bin, item):
 
 
 def find_position_with_rotation(bin, item, rotation):
-    """
-    Find a valid position for an item with a specific rotation.
-    Uses Bottom-Left-Back (BLB) heuristic.
-    
-    Args:
-        bin: Bin object
-        item: Item object
-        rotation: Rotation to try (0-5)
-        
-    Returns:
-        tuple: (x, y, z) if found, None otherwise
-    """
-    # Set rotation temporarily
+     # Set rotation temporarily
     old_rotation = item.rotation
     item.set_rotation(rotation)
     item_dims = item.get_dimensions()
@@ -66,19 +43,6 @@ def find_position_with_rotation(bin, item, rotation):
 
 
 def generate_corner_points(bin, item_dims):
-    """
-    Generate corner points (candidate positions) for placing an item.
-    
-    Corner points are positions where at least one corner of the item
-    touches either a bin wall or another item's surface.
-    
-    Args:
-        bin: Bin object
-        item_dims: Dimensions of item to place (l, w, h)
-        
-    Returns:
-        list: List of (x, y, z) candidate positions, sorted by priority
-    """
     item_l, item_w, item_h = item_dims
     
     # Start with origin point
@@ -132,17 +96,6 @@ def generate_corner_points(bin, item_dims):
 
 
 def pack_items_in_bin(bin, items, sort_items=True):
-    """
-    Pack multiple items into a bin using placement heuristic.
-    
-    Args:
-        bin: Bin object to pack into
-        items: List of Item objects to pack
-        sort_items: Whether to sort items by volume first (default: True)
-        
-    Returns:
-        tuple: (packed_items, unpacked_items)
-    """
     # Sort items by volume (largest first) if requested
     items_to_pack = sorted(items, key=lambda x: x.get_volume(), reverse=True) if sort_items else items.copy()
     
@@ -168,16 +121,6 @@ def pack_items_in_bin(bin, items, sort_items=True):
 
 
 def repack_bin(bin, items=None):
-    """
-    Repack a bin from scratch (useful for optimization).
-    
-    Args:
-        bin: Bin object to repack
-        items: List of items to pack (if None, uses bin's current items)
-        
-    Returns:
-        tuple: (packed_items, unpacked_items)
-    """
     if items is None:
         items = bin.items.copy()
     

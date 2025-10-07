@@ -3,10 +3,6 @@ Main entry point for 3D Bin Packing Problem solver.
 Uses Simulated Annealing optimization algorithm with full 3D placement.
 """
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
-
 from tests.test_instances import TEST_INSTANCES
 from src.utils import first_fit_decreasing
 from src.algorithms import SimulatedAnnealing
@@ -47,7 +43,7 @@ def solve_instance(bin_dimensions, items, instance_name=""):
         min_temp=1.0,
         cooling_rate=0.95,
         iterations_per_temp=50,
-    )
+   )
     final_solution = sa.solve(initial_solution)
     time_sa = time.time() - start_time_sa
     
